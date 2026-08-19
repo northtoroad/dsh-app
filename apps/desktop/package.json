@@ -1,0 +1,28 @@
+{
+  "name": "@deepseek-ai/dsh-desktop-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DeepSeek Harness desktop shell for Apple Silicon macOS",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "icons": "tauri icon app-icon.svg --output src-tauri/icons",
+    "predev": "pnpm run icons",
+    "build": "tauri build --target aarch64-apple-darwin --bundles app,dmg",
+    "prebuild": "pnpm run icons && pnpm run stage-runtime",
+    "prebuild:app": "pnpm run icons && pnpm run stage-runtime",
+    "prebuild:debug": "pnpm run icons",
+    "precheck": "pnpm run icons",
+    "stage-runtime": "node scripts/stage-runtime.mjs",
+    "build:app": "tauri build --target aarch64-apple-darwin --bundles app",
+    "build:debug": "tauri build --target aarch64-apple-darwin --debug --no-bundle",
+    "check": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.0-rc.7"
+  }
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DeepSeek Harness</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        background: #f5f5f7;
+        color: #1d1d1f;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          background: #1d1d1f;
+          color: #f5f5f7;
+        }
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+      }
+
+      main {
+        width: min(430px, calc(100vw - 48px));
+        text-align: center;
+      }
+
+      .mark {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 24px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #0a84ff, #5856d6);
+        box-shadow: 0 12px 30px rgb(10 132 255 / 24%);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 25px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+
+      p {
+        margin: 12px 0 0;
+        color: #86868b;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+
+      .spinner {
+        width: 18px;
+        height: 18px;
+        margin: 28px auto 0;
+        border: 2px solid rgb(128 128 128 / 25%);
+        border-top-color: #0a84ff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true"></div>
+      <h1>DeepSeek Harness</h1>
+      <p>正在启动本地服务…</p>
+      <div class="spinner" aria-label="正在启动" role="status"></div>
+    </main>
+  </body>
+</html>

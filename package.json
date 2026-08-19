@@ -1,0 +1,10 @@
+{
+  "name": "dsh-desktop-app",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "desktop:dev": "pnpm --dir apps/desktop dev",
+    "desktop:build": "pnpm --dir apps/desktop build",
+    "desktop:check": "pnpm --dir apps/desktop check"
+  }
+}

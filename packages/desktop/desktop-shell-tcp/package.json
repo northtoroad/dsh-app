@@ -1,0 +1,12 @@
+{
+  "name": "@deepseek-ai/dsh-desktop-shell-tcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-desktop-shell": "workspace:*"
+  }
+}
