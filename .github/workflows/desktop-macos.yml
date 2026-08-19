@@ -1,0 +1,53 @@
+name: desktop-macos
+
+on:
+  push:
+    paths:
+      - "apps/desktop/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "rust-toolchain.toml"
+      - ".github/workflows/desktop-macos.yml"
+  pull_request:
+    paths:
+      - "apps/desktop/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "rust-toolchain.toml"
+      - ".github/workflows/desktop-macos.yml"
+
+jobs:
+  build:
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-14
+            target: aarch64-apple-darwin
+            script: build:arm64
+          - arch: x64
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+            script: build:x64
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.2
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir apps/desktop test:runtime
+      - run: pnpm --dir apps/desktop run ${{ matrix.script }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DeepSeek-Harness-macos-${{ matrix.arch }}
+          path: apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          if-no-files-found: error

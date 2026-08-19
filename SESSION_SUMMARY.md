@@ -4,12 +4,12 @@
 
 ## 1. 当前目标与状态
 
-本项目按照 `desktop-implementation.md` 实现了 DeepSeek Harness 的桌面端外壳，当前只支持 **macOS Apple Silicon（aarch64）**，最低 macOS 版本为 13.0。
+本项目按照 `desktop-implementation.md` 实现了 DeepSeek Harness 的桌面端外壳，支持 **macOS Apple Silicon（arm64）和 Intel（x64）**，最低 macOS 版本为 13.0。
 
 当前状态：
 
 - 本地桌面 App 已可以正常启动并加载 DSH Web UI。
-- 可以生成 Apple Silicon `.app` 和 `.dmg` 安装包。
+- 可以分别生成 Apple Silicon 与 Intel 的 `.app` 和 `.dmg` 安装包。
 - 运行时 Node 与 DSH CLI 可以在构建时自动放入应用资源，因此用户不必单独安装 Node。
 - 当前本地安装包仍属于开发阶段产物；正式公开分发还需要 Apple Developer ID 签名和公证。
 
@@ -30,14 +30,18 @@ Tauri v2 外壳
 - `apps/desktop/src-tauri/src/bridge.rs`：loopback TCP 桥接、令牌认证、通知和文件定位。
 - `packages/desktop/desktop-shell`：桌面能力抽象接口。
 - `packages/desktop/desktop-shell-tcp`：DSH 侧 TCP 桥接提供方；没有桥接环境变量时自动降级为空操作。
-- `apps/desktop/scripts/stage-runtime.mjs`：构建时复制 Node，并安装生产版 `@deepseek-ai/dsh` 运行时。
-- `apps/desktop/src-tauri/tauri.conf.json`：Apple Silicon 构建资源、Hardened Runtime 和 macOS 最低版本配置。
+- `apps/desktop/scripts/build.mjs`：按目标架构准备运行时、调用 Tauri 并验证 Bundle。
+- `apps/desktop/scripts/stage-runtime.mjs`：下载并校验目标架构 Node，安装生产版 `@deepseek-ai/dsh` 运行时。
+- `apps/desktop/src-tauri/tauri.conf.json`：双架构共用的构建资源、Hardened Runtime 和 macOS 最低版本配置。
 
-代码通过编译条件限制非 Apple Silicon macOS 构建：
+代码通过编译条件限制非 macOS 或非 arm64/x86_64 构建：
 
 ```rust
-#[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
-compile_error!("DeepSeek Harness Desktop is released for Apple Silicon macOS only");
+#[cfg(not(all(
+    target_os = "macos",
+    any(target_arch = "aarch64", target_arch = "x86_64")
+)))]
+compile_error!("DeepSeek Harness Desktop supports arm64 and x86_64 macOS only");
 ```
 
 ## 3. 本次排查并解决的问题
@@ -98,23 +102,29 @@ export DSH_DESKTOP_DSH_BIN=/path/to/dsh/lib/bin.js
 pnpm --dir apps/desktop dev
 ```
 
-构建 Apple Silicon 安装包：
+构建架构独立的安装包：
 
 ```sh
-pnpm --dir apps/desktop build
+pnpm desktop:build:arm64
+pnpm desktop:build:x64
+pnpm desktop:build:all
 ```
 
-构建脚本会先生成图标并准备生产运行时，然后调用 Tauri 生成 `.app` 和 `.dmg`。本地构建产物位于：
+`desktop:build` 仍默认构建 arm64。构建脚本会先生成图标，下载并校验固定版本的目标架构 Node，使用目标 Node 安装原生依赖，然后调用 Tauri 并验证 Bundle。Apple Silicon 本机构建 x64 需要 Rosetta 2。本地构建产物位于：
 
 ```text
 apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/
 apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/
+apps/desktop/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/
+apps/desktop/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/
 ```
 
 常用检查命令：
 
 ```sh
 pnpm --dir apps/desktop check
+pnpm --dir apps/desktop check:all
+pnpm --dir apps/desktop test:runtime
 pnpm --dir apps/desktop fmt
 ```
 
@@ -127,7 +137,7 @@ pnpm --dir apps/desktop fmt
 1. 创建 Apple Developer 账号和 Developer ID Application 证书。
 2. 在本地或 CI 中配置证书、签名身份和公证凭据；凭据不能提交进 Git。
 3. 签名 `.app`/DMG，提交 Apple 公证并 stapling。
-4. 在另一台 Apple Silicon Mac 上验证安装、首次启动、卸载和升级。
+4. 分别在 Apple Silicon 和 Intel Mac 上验证安装、首次启动、卸载和升级。
 5. 发布原始 DMG，或将已签名且已公证的 `.app` 正确压缩为 ZIP；不要把 DMG 再套一层 ZIP 作为替代方案。
 
 如果改为发布到 Mac App Store，应使用 `Apple Distribution` 证书和 App Store Connect 流程；Enterprise 计划不适合公开下载场景。
@@ -139,6 +149,7 @@ pnpm --dir apps/desktop fmt
 - `node_modules/`、`.pnpm-store/`
 - Rust `target/`
 - 自动生成的 Tauri 图标目录
+- `.runtime-cache/` 下按架构缓存的 Node 官方发行包
 - `apps/desktop/src-tauri/resources/runtime/node/` 下的 Node 二进制
 - `apps/desktop/src-tauri/resources/runtime/dsh/` 下的生产运行时
 - `dist/`
@@ -147,4 +158,4 @@ pnpm --dir apps/desktop fmt
 
 ## 7. 下一步建议
 
-优先完成 macOS Developer ID 签名、公证和 CI Secret 配置，然后在干净的 Apple Silicon Mac 上验证正式安装包。完成这一步后，再考虑自动更新、钥匙串凭据存储、原生文件选择器和崩溃反馈等增强能力。
+优先完成 macOS Developer ID 签名、公证和 CI Secret 配置，然后在干净的 Apple Silicon 与 Intel Mac 上分别验证正式安装包。完成这一步后，再考虑自动更新、钥匙串凭据存储、原生文件选择器和崩溃反馈等增强能力。

@@ -1,7 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-#[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
-compile_error!("DeepSeek Harness Desktop is released for Apple Silicon macOS only");
+#[cfg(not(all(
+    target_os = "macos",
+    any(target_arch = "aarch64", target_arch = "x86_64")
+)))]
+compile_error!("DeepSeek Harness Desktop supports arm64 and x86_64 macOS only");
 
 mod bridge;
 mod sidecar;

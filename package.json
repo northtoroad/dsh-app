@@ -5,6 +5,10 @@
   "scripts": {
     "desktop:dev": "pnpm --dir apps/desktop dev",
     "desktop:build": "pnpm --dir apps/desktop build",
+    "desktop:build:arm64": "pnpm --dir apps/desktop build:arm64",
+    "desktop:build:x64": "pnpm --dir apps/desktop build:x64",
+    "desktop:build:all": "pnpm --dir apps/desktop build:all",
+    "desktop:test:runtime": "pnpm --dir apps/desktop test:runtime",
     "desktop:check": "pnpm --dir apps/desktop check"
   }
 }
