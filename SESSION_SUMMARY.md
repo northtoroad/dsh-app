@@ -85,6 +85,21 @@ export DSH_DESKTOP_DSH_BIN=/path/to/dsh/apps/cli/lib/bin.js
 
 此前安装包是开发阶段的 ad-hoc 签名或未完成公证的产物。直接把 DMG 再压缩成 ZIP 也不是正式 macOS 分发流程，可能导致 Gatekeeper 报错。正式发布应使用 Developer ID 签名、Apple 公证，并保留原始 DMG 或从已公证的 App 正确制作 ZIP。
 
+### Apple Silicon 提示 App“已损坏”
+
+如果 arm64 DMG 的 SHA-256 与发布值一致，并且 `hdiutil verify` 通过，则文件本身没有损坏。当前开发包的 arm64 主程序带有链接器生成的临时签名，但整个 `.app` 尚未建立完整的资源签名；Gatekeeper 可能因此将签名错误显示为“已损坏”。
+
+仅对来源可信的内部测试包，可先将 App 拖入 `/Applications` 并推出 DMG，再执行：
+
+```sh
+/usr/bin/codesign --force --deep --sign - "/Applications/DeepSeek Harness.app"
+/usr/bin/codesign --verify --deep --strict --verbose=2 "/Applications/DeepSeek Harness.app"
+/usr/bin/xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"
+open "/Applications/DeepSeek Harness.app"
+```
+
+签名校验应显示 `valid on disk` 和 `satisfies its Designated Requirement`。如果 `/Applications` 权限不足，可在 `codesign` 和 `xattr` 命令前添加 `sudo`。不要直接修改只读 DMG 内的 App，也不要全局关闭 Gatekeeper。这个本地 ad-hoc 签名只是开发包安装的临时措施，不能替代 Developer ID 签名和 Apple 公证。
+
 ## 4. 本地运行和构建
 
 在仓库根目录执行：

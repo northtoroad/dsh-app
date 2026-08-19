@@ -65,6 +65,32 @@ src-tauri/target/aarch64-apple-darwin/release/bundle/{macos,dmg}/
 src-tauri/target/x86_64-apple-darwin/release/bundle/{macos,dmg}/
 ```
 
+## 安装未签名的开发包
+
+Apple Silicon 使用 `_aarch64.dmg`，Intel 使用 `_x64.dmg`。安装前应将下载
+文件的 SHA-256 与该次构建发布的校验值进行比较。确认一致后打开 DMG，将
+`DeepSeek Harness.app` 拖入 `Applications`，推出 DMG，再启动已经复制到
+“应用程序”目录的 App。
+
+当前开发包尚未使用 Developer ID 签名，也没有经过 Apple 公证。在 Apple
+Silicon 上，即使 DMG 校验值正确，Gatekeeper 仍可能提示 App“已损坏”。仅对
+来源可信的内部测试包，可为已经复制的 App 添加本地 ad-hoc 签名，验证签名，
+移除隔离属性，然后启动：
+
+```sh
+/usr/bin/codesign --force --deep --sign - "/Applications/DeepSeek Harness.app"
+/usr/bin/codesign --verify --deep --strict --verbose=2 "/Applications/DeepSeek Harness.app"
+/usr/bin/xattr -dr com.apple.quarantine "/Applications/DeepSeek Harness.app"
+open "/Applications/DeepSeek Harness.app"
+```
+
+签名校验命令应显示 `valid on disk` 和 `satisfies its Designated Requirement`。
+如果没有 `/Applications` 的写入权限，可在 `codesign` 和 `xattr` 命令前添加
+`sudo`。不要对已挂载 DMG 内的只读 App 执行签名，也不要全局关闭 Gatekeeper。
+
+该 ad-hoc 签名只会修改本地安装的测试副本，不能替代 Developer ID 签名和
+Apple 公证。
+
 ## Runtime overrides
 
 Release builds use the exact npm package version installed in this workspace.
