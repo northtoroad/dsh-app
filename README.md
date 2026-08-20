@@ -10,7 +10,7 @@
 
 ## 下载与安装
 
-安装包发布在 [GitHub Releases](https://github.com/sscm/DSH-APP/releases)。下载与电脑架构对应的 DMG：
+安装包发布在 [GitHub Releases](https://github.com/northtoroad/dsh-app/releases)。下载与电脑架构对应的 DMG：
 
 | 电脑 | 安装包 |
 | --- | --- |
